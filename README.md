@@ -4,4 +4,4 @@
 
 jakhine@gmail.com 
 
-t.me/jakhine
+https://t.me/jakhine
