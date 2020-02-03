@@ -1,32 +1,50 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.sun.net.httpserver.HttpServer;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 public class Main {
 
     public static Logger log = Logger.getLogger(Main.class);
 
     public static void main(String[] args) {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-            BasicConfigurator.configure(); //TODO донастроить log4j
-        try {
 
-            String configFilePath = "C:\\Users\\A650322\\IdeaProjects\\WebServer\\src\\main\\resources\\config.yml"; // путь к файлу с конфигами сервера
-            MySimpleServer mss = objectMapper.readValue(new File(configFilePath), MySimpleServer.class);
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        BasicConfigurator.configure(); //TODO донастроить log4j
+        try {
+            File configFile = new File("C:\\Users\\A650322\\IdeaProjects\\WebServer\\src\\main\\resources\\config.yml"); //определяем файл с конфигами сервера
+            MySimpleServer mss = objectMapper.readValue(configFile, MySimpleServer.class);          //присваиваем значения
+            File rootDir = new File(mss.getRootFolder()); //определяем корневой каталог
             log.info(String.format("Server was created with the following parameters %s ", mss));
-            mss.createSocket(8080);
-            Socket clientSocket = mss.listen();
-            log.info(String.format("Connection successful. from address -  %s ", clientSocket.getInetAddress()));
-            //TODO
+            mss.createSocket();
+
+            while (true) {
+                Socket clientSocket = mss.listen();
+                log.info(String.format("Connection successful. from address -  %s ", clientSocket.getInetAddress()));
+                InputStream input = clientSocket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                String line = reader.readLine();
+                if (line == null) {
+                    continue;
+                } else {
+                    OutputStream output = clientSocket.getOutputStream();
+                    PrintWriter writer = new PrintWriter(output, true);
+                    // String httpMethod = line.split(" ")[0];
+
+                    String addr = line.split(" ")[1];
+
+                    writer.println("HTTP/1.1 200 OK"); //TODO дописать заполнение заголовков ответа
+//                    writer.println("Content-Type: text/html; charset=utf-8");
+//                    output.write(new FileOutputStream(new File(mss.getRootFolder()+uriAddr)));
+//                    clientSocket.close();
+                }
+                log.info(String.format("address -  %s ", line));
+                //TODO
+            }
 
 
         } catch (IOException e) {

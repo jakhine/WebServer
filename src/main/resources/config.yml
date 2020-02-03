@@ -3,6 +3,6 @@
 #  port : 8080
 #  indexFile : index.html
 #server details
-rootFolder : c:/www
+rootFolder : c:\www
 localPort : 8080
 indexFile : index.html

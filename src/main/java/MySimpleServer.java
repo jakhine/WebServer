@@ -2,8 +2,10 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+
 
 public class MySimpleServer {
 
@@ -28,8 +30,8 @@ public class MySimpleServer {
 
     }
 
-    public void createSocket(int port) throws IOException {
-            socket = new ServerSocket(port);
+    public void createSocket() throws IOException {
+            socket = new ServerSocket(localPort);
 
     }
 
@@ -47,6 +49,7 @@ public String getRootFolder() {
     }
 
     public String getIndexFile() {
+
         return indexFile;
     }
 
