@@ -21,7 +21,7 @@ public class MainController {
                 Socket clientSocket = myServer.listen();
                 Request request = new Request(clientSocket);
                 if (request.path == null) continue;
-                log.info(String.format("Connection successful. from address -  %s , and with request - %s", clientSocket.getInetAddress(), request));
+                log.info(String.format("Connection from address -  %s , and with request - %s", clientSocket.getInetAddress(), request));
                 OutputStream output = clientSocket.getOutputStream();
                 PrintWriter writer = new PrintWriter(output, true);
                 String path = request.path;
@@ -32,30 +32,27 @@ public class MainController {
                 File file = new File(myServer.getRootFolderPath() + path);
                 Response response = new Response();
 
-                if (!file.exists()){
+                if (!file.exists()) {
                     response.setStatusCode("404 NOT FOUND");
                     sendResponse(response, writer);
-
                 }
+                response.setStatusCode("200 OK");
 
-                if (file.getPath().endsWith(".html")||file.getPath().endsWith(".txt")) {
-                    response.setStatusCode("200 OK");
+                if (file.getPath().endsWith(".html") || file.getPath().endsWith(".txt")) {
                     response.setHeaders("Content-Type: ", "text/html");
                     sendResponse(response, writer);
                     sendTextHtml(file, writer);
                 }
 
                 if (file.getPath().endsWith(".jpg")) {
-                    response.setStatusCode("200 OK");
                     response.setHeaders("Content-Type: ", "image/jpeg");
                     sendResponse(response, writer);
                     sendJpg(file, output);
                 }
 
-                if (file.isDirectory()){
-                    response.setStatusCode("501 Not Implemented");                  // "501 Not Implemented"
-                    sendResponse(response,writer);
-                    file.list();
+                if (file.isDirectory()) {
+                    sendResponse(response, writer);
+                    sendList(file, writer);
                 }
 
                 output.flush();
@@ -92,6 +89,17 @@ public class MainController {
         while ((count = fileInputStream.read(buf)) != -1) {
             output.write(buf, 0, count);
         }
+    }
 
+    static void sendList(File file, PrintWriter writer) {
+        StringBuilder sb = new StringBuilder();
+        if (file.list().length == 0) {
+            sb.append("The folder is empty");
+        } else {
+            for (String s : file.list()) {
+                sb.append(String.format("<a href=\"%s\\%s\"> %s </a> <br> ", file.getName(), s, s));
+            }
+        }
+        writer.write(sb.toString());
     }
 }

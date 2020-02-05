@@ -25,7 +25,7 @@ public class Request {
             System.out.println(headers);
             String[] lines = line.split(" ");
             this.httpMethod = lines[0];
-            this.path = lines[1];
+            this.path = lines[1].replace("%20", " ");
             this.protocol = lines[2];
             this.headers = headers;
         }
