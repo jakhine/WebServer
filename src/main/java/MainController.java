@@ -19,7 +19,7 @@ public class MainController {
 
             while (true) {
                 Socket clientSocket = myServer.listen();
-                Request request = new Request(clientSocket);
+                HttpRequest request = new HttpRequest(clientSocket);
                 if (request.path == null) continue;
                 log.info(String.format("Connection from address -  %s , and with request - %s", clientSocket.getInetAddress(), request));
                 OutputStream output = clientSocket.getOutputStream();
@@ -30,28 +30,28 @@ public class MainController {
                     path = path + "index.html";
                 }
                 File file = new File(myServer.getRootFolderPath() + path);
-                Response response = new Response();
+                HttpResponse httpResponse = new HttpResponse();
 
                 if (!file.exists()) {
-                    response.setStatusCode("404 NOT FOUND");
-                    sendResponse(response, writer);
+                    httpResponse.setStatusCode("404 NOT FOUND");
+                    sendResponse(httpResponse, writer);
                 }
-                response.setStatusCode("200 OK");
+                httpResponse.setStatusCode("200 OK");
 
                 if (file.getPath().endsWith(".html") || file.getPath().endsWith(".txt")) {
-                    response.setHeaders("Content-Type: ", "text/html");
-                    sendResponse(response, writer);
+                    httpResponse.setHeaders("Content-Type: ", "text/html");
+                    sendResponse(httpResponse, writer);
                     sendTextHtml(file, writer);
                 }
 
                 if (file.getPath().endsWith(".jpg")) {
-                    response.setHeaders("Content-Type: ", "image/jpeg");
-                    sendResponse(response, writer);
+                    httpResponse.setHeaders("Content-Type: ", "image/jpeg");
+                    sendResponse(httpResponse, writer);
                     sendJpg(file, output);
                 }
 
                 if (file.isDirectory()) {
-                    sendResponse(response, writer);
+                    sendResponse(httpResponse, writer);
                     sendList(file, writer);
                 }
 
@@ -64,30 +64,38 @@ public class MainController {
         }
     }
 
-    static void sendResponse(Response response, PrintWriter writer) {
-        writer.println(response.getHeadLine());
-        writer.println(response.getHeaders().entrySet());      //; charset=utf-8"
-        log.info(String.format("headers %s Sent", response.getHeaders()));
+    static void sendResponse(HttpResponse httpResponse, PrintWriter writer) {
+        writer.println(httpResponse.getHeadLine());
+        writer.println(httpResponse.getHeaders().entrySet());      //; charset=utf-8"
+        log.info(String.format("headers %s Sent", httpResponse.getHeaders()));
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
     }
 
     static void sendTextHtml(File file, PrintWriter writer) throws IOException {
-        FileReader fileReader = new FileReader(file);
-        char[] buf = new char[256];
-        int count = 0;
-        while ((count = fileReader.read(buf)) != -1) { //читает посимвольно из файла и пишет в буферный массив символов, возвращает ол-во символов или  -1 когда файл "кончился"
-            writer.write(buf, 0, count);
+        try (FileReader fileReader = new FileReader(file)) {
+            char[] buf = new char[256];
+            int count = 0;
+            while ((count = fileReader.read(buf)) != -1) { //читает посимвольно из файла и пишет в буферный массив символов, возвращает ол-во символов или  -1 когда файл "кончился"
+                writer.write(buf, 0, count);
+            }
         }
         log.info(String.format("file %s Sent", file.getPath()));
     }
 
     static void sendJpg(File file, OutputStream output) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(file);
-        System.out.println(file.getPath());
-        byte[] buf = new byte[250];
-        int count = 0;
-        while ((count = fileInputStream.read(buf)) != -1) {
-            output.write(buf, 0, count);
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            System.out.println(file.getPath());
+            byte[] buf = new byte[250];
+            int count = 0;
+            while ((count = fileInputStream.read(buf)) != -1) {
+                output.write(buf, 0, count);
+            }
+        } finally {
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
         }
     }
 

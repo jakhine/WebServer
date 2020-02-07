@@ -1,13 +1,13 @@
 import java.util.HashMap;
 import java.util.Map;
 
-public class Response {
+public class HttpResponse {
 
-   private String protocol = "HTTP/1.1";
+    private final String protocol = "HTTP/1.1";
     private String statusCode;
     private Map<String, String> headers = new HashMap<>();
 
-    public Response() {
+    public HttpResponse() {
 
     }
 

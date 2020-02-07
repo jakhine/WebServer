@@ -26,6 +26,13 @@ public class MyServer {
 
 
     public MyServer() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                //Log Error
+            }
+        }));
     }
 
 
@@ -55,5 +62,7 @@ public class MyServer {
         return String.format("rootFolderPath - %s, port - %s, indexFile - %s", rootFolderPath, localPort, indexFile);
 
     }
+
+
 
 }

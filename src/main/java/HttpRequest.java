@@ -6,13 +6,13 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Request {
-    String httpMethod;
+public class HttpRequest {
+    private final String httpMethod;
     String path;
     String protocol;
     Map<String, String> headers;
 
-    public Request(Socket clientSocket) throws IOException {
+    public HttpRequest(Socket clientSocket) throws IOException {
         InputStream input = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         String line = reader.readLine();
@@ -28,6 +28,8 @@ public class Request {
             this.path = lines[1].replace("%20", " ");
             this.protocol = lines[2];
             this.headers = headers;
+        } else {
+            throw new IllegalArgumentException("Null HTTP Requests are not allowed");
         }
     }
 
