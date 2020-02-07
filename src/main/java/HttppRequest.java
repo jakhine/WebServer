@@ -6,13 +6,13 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Request {
-    String httpMethod;
-    String path;
-    String protocol;
+public class HttppRequest {
+     private String httpMethod;
+     String path;
+     String protocol;
     Map<String, String> headers;
 
-    public Request(Socket clientSocket) throws IOException {
+    public HttppRequest(Socket clientSocket) throws IOException {
         InputStream input = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         String line = reader.readLine();
