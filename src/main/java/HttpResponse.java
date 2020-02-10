@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class HttpResponse {
 
-   private final String protocol = "HTTP/1.1";
+    private final String protocol = "HTTP/1.1";
     private String statusCode;
     private Map<String, String> headers = new HashMap<>();
 
