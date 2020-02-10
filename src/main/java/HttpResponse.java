@@ -19,7 +19,7 @@ public class HttpResponse {
 
 
     public void setHeaders(String key, String value) {
-        headers.put(key, value);
+                headers.put(key, value);
            }
 
     public Map<String, String> getHeaders() {
