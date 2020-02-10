@@ -23,24 +23,29 @@ public class MyServer {
     private Socket clientSocket;
 
 
-    public static void Start( ){
+    public static void launch() {
         BasicConfigurator.configure();
         MyServer myServer = new MyServer();
         Configuration.ConfigureServer(myServer);
         try {
             myServer.createSocket();
-            myServer.listen();
-
+            while (true) {
+                myServer.listen();
+                HttppRequest httppRequest = new HttppRequest(myServer.clientSocket);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
-   void createSocket() throws IOException {
-       socket = new ServerSocket(localPort);
+
+    void createSocket() throws IOException {
+        socket = new ServerSocket(localPort);
     }
-    void listen () throws IOException{
+
+    void listen() throws IOException {
         clientSocket = this.socket.accept();
+        logger.info(String.format("connection from address+ %s", clientSocket.getInetAddress()));
     }
 
 

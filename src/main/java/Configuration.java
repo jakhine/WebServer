@@ -28,7 +28,7 @@
     public static void ConfigureServer (MyServer myServer){
         BasicConfigurator.configure();
         Properties property = new Properties();
-
+        property.getProperty("content-type");
         try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
             property.load(fis);
             myServer.setRootFolderPath(property.getProperty("rootFolderPath"));
