@@ -1,8 +1,0 @@
-#server :
-#  rootFolder : c:/www
-#  port : 8080
-#  indexFile : index.html
-#server details
-rootFolderPath : c:\www
-localPort : 8080
-indexFile : index.html

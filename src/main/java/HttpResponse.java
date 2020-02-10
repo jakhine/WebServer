@@ -7,6 +7,10 @@ public class HttpResponse {
     private String statusCode;
     private Map<String, String> headers = new HashMap<>();
 
+    public HttpResponse() {
+        setHeaders(Configuration.property.getProperty("content-type"));
+
+    }
 
     public void setStatusCode(String statusCode) {
         this.statusCode = statusCode;
@@ -23,7 +27,10 @@ public class HttpResponse {
             String extension = pair.split(":")[0];
             String content_type = pair.split(":")[1];
             headers.put(extension, content_type);
+
+
         }
+         MyServer.logger.info("headers added " + headers);
     }
 
     public Map<String, String> getHeaders() {

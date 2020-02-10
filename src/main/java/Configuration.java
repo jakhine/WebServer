@@ -16,27 +16,18 @@
     import java.util.Properties;
 
     public class Configuration {
-        static Logger logger = Logger.getLogger(Configuration.class);
-
-
-
-
-
-    //превращаем конфиг файл в класс с полями всех конфигов?
+        public static Properties property = new Properties();
 
     //добавляем параметры из файла
     public static void ConfigureServer (MyServer myServer){
         BasicConfigurator.configure();
-        Properties property = new Properties();
-        property.getProperty("content-type");
+
         try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
             property.load(fis);
             myServer.setRootFolderPath(property.getProperty("rootFolderPath"));
             myServer.setLocalPort(Integer.parseInt (property.getProperty("localPort")));
-
-
         } catch (IOException e) {
-            logger.error(String.format ("Файл свойств отсуствует! - %s",e));
+            MyServer.logger.error(String.format ("Файл свойств отсуствует! - %s",e));
         }
 
 

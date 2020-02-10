@@ -7,27 +7,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttppRequest {
-     private String httpMethod;
-     String path;
-     String protocol;
-    Map<String, String> headers;
+
+    private String httpMethod;
+    private String path;
+    private String protocol;
+    private Map<String, String> headers;
 
     public HttppRequest(Socket clientSocket) throws IOException {
-        InputStream input = clientSocket.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        String line = reader.readLine();
-        Map<String, String> headers = new HashMap<>();
-        if (line != null) {
-            while(reader.ready()){
-                String [] pair = reader.readLine().split(": ");
-                if (pair.length==2)  headers.put(pair[0],pair[1]);
+        try (InputStream input = clientSocket.getInputStream()) { // try-catch with resources
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) { //try-catch with resources
+                String line = reader.readLine();
+                Map<String, String> headers = new HashMap<>();
+                if (line != null) {
+                    while (reader.ready()) {
+                        String[] pair = reader.readLine().split(": ");
+                        if (pair.length == 2) headers.put(pair[0], pair[1]);
+                    }
+                    String[] lines = line.split(" ");
+                    this.httpMethod = lines[0];
+                    this.path = lines[1].replace("%20", " ");
+                    this.protocol = lines[2];
+                    this.headers = headers;
+                }
             }
-            System.out.println(headers);
-            String[] lines = line.split(" ");
-            this.httpMethod = lines[0];
-            this.path = lines[1].replace("%20", " ");
-            this.protocol = lines[2];
-            this.headers = headers;
         }
     }
 
@@ -37,4 +39,21 @@ public class HttppRequest {
 
         return super.toString() + String.format("httpMethod - %s, path - %s, protocol - %s", httpMethod, path, protocol);
     }
+
+    public String getHttpMethod() {
+        return httpMethod;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
 }
