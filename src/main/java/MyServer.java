@@ -4,6 +4,8 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.time.Instant;
 
 /*
 Класс в котором
@@ -18,10 +20,11 @@ public class MyServer {
 
     private String rootFolderPath;
     private int localPort;
+    private int shutdownPort;
     private ServerSocket socket;
     private Socket clientSocket;
     private String indexFile;
-
+    boolean isOn = true;
 
     public static void launch() {
         BasicConfigurator.configure();
@@ -29,49 +32,60 @@ public class MyServer {
         Configuration.ConfigureServer(myServer);
         try {
             myServer.createSocket();
-            while (true) {
+            do {
                 myServer.listen();
-                try (InputStream input = myServer.clientSocket.getInputStream();
-                     OutputStream output = myServer.clientSocket.getOutputStream();
-                     PrintWriter writer = new PrintWriter(output, true);
-                ) { // try-catch with resources
-                    HttpRequest httpRequest = new HttpRequest(input);
-                    HttpResponse response = new HttpResponse();
-                    String path = httpRequest.getPath();
-                    if (path.endsWith("/")) path = path + myServer.indexFile;
-                    File file = new File(myServer.rootFolderPath + path);
-                    myServer.sendResponseWithFile(response, file, writer, output);
+                try (InputStream input = myServer.clientSocket.getInputStream()) {
+                    try (OutputStream output = myServer.clientSocket.getOutputStream()) {                // try-catch with resources
+                        try (PrintWriter writer = new PrintWriter(output, true)) {
+                            HttpRequest httpRequest = new HttpRequest(input);
+                            String path = "" + httpRequest.getPath();
+                            if (path.endsWith("/")) path = path + myServer.indexFile;
+                            File file = new File(myServer.rootFolderPath + path);
+                            myServer.sendResponseWithFile(file, writer, output);
+
+                        }
+                    }
                 }
-            }
+
+            } while (myServer.isOn);
         } catch (Exception e) {
-            logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
+            if (myServer.isOn)
+                logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
+            else logger.info(String.format("Server was shut down at %s", Instant.now()));
         }
 
     }
 
     public void sendResponse(HttpResponse response, PrintWriter writer) {
-
-        writer.println(response.getHeadLine());
-        writer.println(response.getContentType());
+        if (response.getHeadLine().toLowerCase().contains("404 not found")) {
+            writer.println(response.getHeadLine());
+            writer.println(response.getContentType());
+            writer.write("<h4> The file not found  </h4>");
+        } else {
+            writer.println(response.getHeadLine());
+            writer.println(response.getContentType());
+        }
         logger.info(String.format("headers %s Sent", response.getHeadLine()));
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
-
-//        catch () {
-//            logger.error(String.format("Could not send response: %s", e.getMessage()), e);
-//        }
     }
 
-    public void sendResponseWithFile(HttpResponse response, File file, PrintWriter writer, OutputStream output) {
+    public void sendResponseWithFile(File file, PrintWriter writer, OutputStream output) {
+        HttpResponse response = new HttpResponse();
+        if (file.isDirectory()) {
+            file = new File(file.getAbsolutePath() + "/" + indexFile);
+        }
         if (!file.exists()) {
             response.setStatusCode("404 NOT FOUND");
             sendResponse(response, writer);
             return;
         }
+
         if (file.getName().contains(".")) {
             String filename = file.getName();
             String fileExtension = filename.substring(filename.lastIndexOf("."));
             response.setContentType(fileExtension);
         }
+
         sendResponse(response, writer);
 
         sendFile(file, output);
@@ -81,20 +95,22 @@ public class MyServer {
     void sendFile(File file, OutputStream output) {
         try (FileInputStream fileInputStream = new FileInputStream(file);
         ) {
-
             byte[] buf = new byte[250];
             int count = 0;
             while ((count = fileInputStream.read(buf)) != -1) {
                 output.write(buf, 0, count);
             }
-            logger.info(String.format("File %s sent",file.getPath()));
+            logger.info(String.format("File %s sent", file.getPath()));
         } catch (IOException e) {
+
             logger.error(String.format("Could not send file: %s", e.getMessage()), e);
         }
     }
 
     void createSocket() throws IOException {
         socket = new ServerSocket(localPort);
+
+
     }
 
     void listen() throws IOException {
@@ -102,6 +118,13 @@ public class MyServer {
         logger.info(String.format("connection from address+ %s", clientSocket.getInetAddress()));
     }
 
+    void listenForShutdown() throws IOException {
+        ServerSocket sDSocket = new ServerSocket(shutdownPort);
+        Socket shdwnSckt = sDSocket.accept();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()));
+
+        if (reader.readLine().contains("shutdown")) isOn = false;
+    }
 
     public void setRootFolderPath(String rootFolderPath) {
         this.rootFolderPath = rootFolderPath;
@@ -116,9 +139,11 @@ public class MyServer {
         this.indexFile = indexFile;
     }
 
+    public void setShutdownPort(int shutdownPort) {
+        this.shutdownPort = shutdownPort;
+    }
+
     public String getIndexFile() {
         return indexFile;
     }
-
-
 }

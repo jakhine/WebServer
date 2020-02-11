@@ -9,7 +9,7 @@ public class HttpResponse {
     private String statusCode;
     private Map<String, String> typeMapping = new HashMap<>();
 
-    private String contentType;
+    private String contentType = "";
 
     public HttpResponse() {
         setTypeMapping(Configuration.property.getProperty("content-type"));

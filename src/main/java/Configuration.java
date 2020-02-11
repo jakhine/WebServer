@@ -20,6 +20,7 @@ public class Configuration {
             myServer.setRootFolderPath(property.getProperty("rootFolderPath"));
             myServer.setLocalPort(Integer.parseInt(property.getProperty("localPort")));
             myServer.setIndexFile(property.getProperty("indexFile"));
+            myServer.setShutdownPort(Integer.parseInt(property.getProperty("shutdownPort")));
         } catch (IOException e) {
             MyServer.logger.error(String.format("Файл свойств отсуствует! - %s", e));
         }
