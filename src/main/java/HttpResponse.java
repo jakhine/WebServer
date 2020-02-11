@@ -6,8 +6,6 @@ import java.util.Map;
 
 public class HttpResponse {
 
-    private final String protocol = "HTTP/1.1";
-
     private String statusCode;
     private Map<String, String> typeMapping = new HashMap<>();
 
@@ -23,6 +21,7 @@ public class HttpResponse {
 
 
     public String getHeadLine() {
+        String protocol = "HTTP/1.1";
         return String.format("%s %s", protocol, statusCode);
     }
 

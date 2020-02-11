@@ -31,57 +31,65 @@ public class MyServer {
             myServer.createSocket();
             while (true) {
                 myServer.listen();
-                HttpRequest httpRequest = new HttpRequest(myServer.clientSocket);
-                HttpResponse response = new HttpResponse();
-                String path = httpRequest.getPath();
-                if (path.endsWith("/")) path = path + myServer.indexFile;
-                File file = new File(myServer.rootFolderPath + path);
-                myServer.sendResponseWithFile(response,file);
+                try (InputStream input = myServer.clientSocket.getInputStream();
+                     OutputStream output = myServer.clientSocket.getOutputStream();
+                     PrintWriter writer = new PrintWriter(output, true);
+                ) { // try-catch with resources
+                    HttpRequest httpRequest = new HttpRequest(input);
+                    HttpResponse response = new HttpResponse();
+                    String path = httpRequest.getPath();
+                    if (path.endsWith("/")) path = path + myServer.indexFile;
+                    File file = new File(myServer.rootFolderPath + path);
+                    myServer.sendResponseWithFile(response, file, writer, output);
+                }
             }
         } catch (Exception e) {
             logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
         }
 
     }
-    public void sendResponse(HttpResponse response)  {
-        try(PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);){
-            writer.println(response.getHeadLine());
-            writer.println(response.getContentType());
-            logger.info(String.format("headers %s Sent", response.getHeadLine()));
-            writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
-        }
-        catch (IOException e) {
-            logger.error(String.format("Could not send response: %s", e.getMessage()),e);
-        }
+
+    public void sendResponse(HttpResponse response, PrintWriter writer) {
+
+        writer.println(response.getHeadLine());
+        writer.println(response.getContentType());
+        logger.info(String.format("headers %s Sent", response.getHeadLine()));
+        writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
+
+//        catch () {
+//            logger.error(String.format("Could not send response: %s", e.getMessage()), e);
+//        }
     }
 
-    public void sendResponseWithFile( HttpResponse response , File file){
+    public void sendResponseWithFile(HttpResponse response, File file, PrintWriter writer, OutputStream output) {
         if (!file.exists()) {
             response.setStatusCode("404 NOT FOUND");
-            sendResponse(response);
+            sendResponse(response, writer);
             return;
         }
-        if (file.getName().contains(".")){
+        if (file.getName().contains(".")) {
             String filename = file.getName();
             String fileExtension = filename.substring(filename.lastIndexOf("."));
             response.setContentType(fileExtension);
         }
-        sendResponse(response);
-        sendFile(file);
-            }
+        sendResponse(response, writer);
+
+        sendFile(file, output);
+    }
 
 
-    void sendFile(File file){
+    void sendFile(File file, OutputStream output) {
         try (FileInputStream fileInputStream = new FileInputStream(file);
-             OutputStream output = clientSocket.getOutputStream()) {
-            logger.info((file.getPath()));
+        ) {
+
             byte[] buf = new byte[250];
             int count = 0;
             while ((count = fileInputStream.read(buf)) != -1) {
                 output.write(buf, 0, count);
             }
+            logger.info(String.format("File %s sent",file.getPath()));
         } catch (IOException e) {
-            logger.error(String.format("Could not send file: %s", e.getMessage()),e);
+            logger.error(String.format("Could not send file: %s", e.getMessage()), e);
         }
     }
 

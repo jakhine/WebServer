@@ -13,9 +13,8 @@ public class HttpRequest {
     private String protocol;
     private Map<String, String> headers;
 
-    public HttpRequest(Socket clientSocket) throws IOException {
-        try (InputStream input = clientSocket.getInputStream();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(input))) { // try-catch with resources
+    public HttpRequest(InputStream input) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
             String line = reader.readLine();
             Map<String, String> headers = new HashMap<>();
             if (line != null) {
@@ -30,7 +29,7 @@ public class HttpRequest {
                 this.headers = headers;
 
             }
-        }
+
     }
 
 
