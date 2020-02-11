@@ -1,10 +1,7 @@
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -37,14 +34,17 @@ public class MyServer {
                 myServer.listen();
                 HttppRequest httppRequest = new HttppRequest(myServer.clientSocket);
                 HttpResponse response = new HttpResponse();
+                response.setClientSocket(myServer.clientSocket);
                 String path = httppRequest.getPath();
                 if (path.endsWith("/")) path = path+ "index.html";
                 File file = new File(myServer.rootFolderPath + path);
+                if (!file.exists()) response.setStatusCode("404 NOT FOUND");
+//                String fileExtension = path.substring(path.lastIndexOf("."));
 
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+           logger.error(String.format("Could not create and start web server: %s", e.getMessage()),e);
         }
 
     }
@@ -78,5 +78,7 @@ public class MyServer {
     public void setLocalPort(int localPort) {
         this.localPort = localPort;
     }
+
+
 
 }
