@@ -49,8 +49,8 @@ public class HttpResponse {
     public void sendResponse()  {
         try(PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);){
         writer.println(getHeadLine());
-        writer.println(response.getTypeMapping().entrySet());
-        logger.info(String.format("headers %s Sent", this.getTypeMapping()));
+        writer.println(contentType);
+        MyServer.logger.info(String.format("headers %s Sent", getHeadLine()));
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
         }
        catch (IOException e) {
