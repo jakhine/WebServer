@@ -26,6 +26,7 @@
             property.load(fis);
             myServer.setRootFolderPath(property.getProperty("rootFolderPath"));
             myServer.setLocalPort(Integer.parseInt (property.getProperty("localPort")));
+            myServer.setIndexFile(property.getProperty("indexFile"));
         } catch (IOException e) {
             MyServer.logger.error(String.format ("Файл свойств отсуствует! - %s",e));
         }

@@ -16,12 +16,11 @@ import java.net.Socket;
 public class MyServer {
     static Logger logger = Logger.getLogger(MyServer.class);
 
-
-
     private String rootFolderPath;
     private int localPort;
     private ServerSocket socket;
     private Socket clientSocket;
+    private String indexFile;
 
 
     public static void launch() {
@@ -32,31 +31,57 @@ public class MyServer {
             myServer.createSocket();
             while (true) {
                 myServer.listen();
-                HttppRequest httppRequest = new HttppRequest(myServer.clientSocket);
+                HttpRequest httpRequest = new HttpRequest(myServer.clientSocket);
                 HttpResponse response = new HttpResponse();
-                response.setClientSocket(myServer.clientSocket);
-                String path = httppRequest.getPath();
-                if (path.endsWith("/")) path = path+ "index.html";
+                String path = httpRequest.getPath();
+                if (path.endsWith("/")) path = path + myServer.indexFile;
                 File file = new File(myServer.rootFolderPath + path);
-                if (!file.exists()) response.setStatusCode("404 NOT FOUND");
-//                String fileExtension = path.substring(path.lastIndexOf("."));
-
-
+                myServer.sendResponseWithFile(response,file);
             }
         } catch (Exception e) {
-           logger.error(String.format("Could not create and start web server: %s", e.getMessage()),e);
+            logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
         }
 
     }
+    public void sendResponse(HttpResponse response)  {
+        try(PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);){
+            writer.println(response.getHeadLine());
+            writer.println(response.getContentType());
+            logger.info(String.format("headers %s Sent", response.getHeadLine()));
+            writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
+        }
+        catch (IOException e) {
+            logger.error(String.format("Could not send response: %s", e.getMessage()),e);
+        }
+    }
 
-    static void sendFile(File file, OutputStream output) throws IOException {
-        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+    public void sendResponseWithFile( HttpResponse response , File file){
+        if (!file.exists()) {
+            response.setStatusCode("404 NOT FOUND");
+            sendResponse(response);
+            return;
+        }
+        if (file.getName().contains(".")){
+            String filename = file.getName();
+            String fileExtension = filename.substring(filename.lastIndexOf("."));
+            response.setContentType(fileExtension);
+        }
+        sendResponse(response);
+        sendFile(file);
+            }
+
+
+    void sendFile(File file){
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             OutputStream output = clientSocket.getOutputStream()) {
             logger.info((file.getPath()));
             byte[] buf = new byte[250];
             int count = 0;
             while ((count = fileInputStream.read(buf)) != -1) {
                 output.write(buf, 0, count);
             }
+        } catch (IOException e) {
+            logger.error(String.format("Could not send file: %s", e.getMessage()),e);
         }
     }
 
@@ -79,6 +104,13 @@ public class MyServer {
         this.localPort = localPort;
     }
 
+    public void setIndexFile(String indexFile) {
+        this.indexFile = indexFile;
+    }
+
+    public String getIndexFile() {
+        return indexFile;
+    }
 
 
 }

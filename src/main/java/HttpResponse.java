@@ -8,10 +8,9 @@ public class HttpResponse {
 
     private final String protocol = "HTTP/1.1";
 
-    private Socket clientSocket;
-
     private String statusCode;
     private Map<String, String> typeMapping = new HashMap<>();
+
     private String contentType;
 
     public HttpResponse() {
@@ -46,20 +45,10 @@ public class HttpResponse {
     public void setContentType(String fileExtension) {
         contentType = typeMapping.getOrDefault(fileExtension, "text/plain");
     }
-    public void sendResponse()  {
-        try(PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);){
-        writer.println(getHeadLine());
-        writer.println(contentType);
-        MyServer.logger.info(String.format("headers %s Sent", getHeadLine()));
-        writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
-        }
-       catch (IOException e) {
-           MyServer.logger.error(String.format("Could not send file: %s", e.getMessage()),e);
-        }
+
+    public String getContentType() {
+        return contentType;
     }
 
-    public void setClientSocket(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-    }
 }
 
