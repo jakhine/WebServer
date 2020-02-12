@@ -33,7 +33,7 @@ public class MyServer implements Runnable {
         try {
             Thread thread = new Thread(myServer);
             myServer.createSocket();
-            thread.start();
+            thread.start(); //слушает порт 8081 для выключения
             while (myServer.isOn) {
                 myServer.listen();
                 try (InputStream input = myServer.clientSocket.getInputStream()) {
@@ -82,7 +82,7 @@ public class MyServer implements Runnable {
             return;
         }
 
-        if (file.getName().contains(".")) {
+        if (file.getName().contains(".")) {         // добываем расширение файла
             String filename = file.getName();
             String fileExtension = filename.substring(filename.lastIndexOf("."));
             response.setContentType(fileExtension);
@@ -95,10 +95,9 @@ public class MyServer implements Runnable {
 
 
     void sendFile(File file, OutputStream output) {
-        try (FileInputStream fileInputStream = new FileInputStream(file);
-        ) {
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
             byte[] buf = new byte[250];
-            int count = 0;
+            int count;
             while ((count = fileInputStream.read(buf)) != -1) {
                 output.write(buf, 0, count);
             }
@@ -159,7 +158,4 @@ public class MyServer implements Runnable {
         this.shutdownPort = shutdownPort;
     }
 
-    public String getIndexFile() {
-        return indexFile;
-    }
 }
