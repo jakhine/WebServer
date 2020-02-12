@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.DateFormat;
 import java.time.Instant;
 
 /*
@@ -15,13 +14,14 @@ import java.time.Instant;
 создается КлиентСокет, и согласно Реквесту создается Респонс
 
  */
-public class MyServer {
+public class MyServer implements Runnable {
     static Logger logger = Logger.getLogger(MyServer.class);
 
     private String rootFolderPath;
     private int localPort;
     private int shutdownPort;
     private ServerSocket socket;
+    private ServerSocket sDSocket; //shutdownSocket
     private Socket clientSocket;
     private String indexFile;
     boolean isOn = true;
@@ -31,8 +31,10 @@ public class MyServer {
         MyServer myServer = new MyServer();
         Configuration.ConfigureServer(myServer);
         try {
+            Thread thread = new Thread(myServer);
             myServer.createSocket();
-            do {
+            thread.start();
+            while (myServer.isOn) {
                 myServer.listen();
                 try (InputStream input = myServer.clientSocket.getInputStream()) {
                     try (OutputStream output = myServer.clientSocket.getOutputStream()) {                // try-catch with resources
@@ -47,7 +49,7 @@ public class MyServer {
                     }
                 }
 
-            } while (myServer.isOn);
+            }
         } catch (Exception e) {
             if (myServer.isOn)
                 logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
@@ -109,8 +111,17 @@ public class MyServer {
 
     void createSocket() throws IOException {
         socket = new ServerSocket(localPort);
+        sDSocket = new ServerSocket(shutdownPort);
 
+    }
 
+    @Override
+    public void run() {
+        try {
+            listenForShutdown();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void listen() throws IOException {
@@ -119,11 +130,16 @@ public class MyServer {
     }
 
     void listenForShutdown() throws IOException {
-        ServerSocket sDSocket = new ServerSocket(shutdownPort);
-        Socket shdwnSckt = sDSocket.accept();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()));
 
-        if (reader.readLine().contains("shutdown")) isOn = false;
+        while (isOn) {
+            Socket shdwnSckt = sDSocket.accept();
+            logger.info(String.format("shutDownSocket connected  %s", shdwnSckt.getInetAddress()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()));
+            if (reader.readLine().contains("shutdown")) {
+                isOn = false;
+                logger.info(String.format("Server was shut down at %s", Instant.now()));
+            }
+        }
     }
 
     public void setRootFolderPath(String rootFolderPath) {
