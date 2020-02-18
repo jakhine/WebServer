@@ -13,23 +13,20 @@ import java.util.Properties;
 
 public class Configuration {
     private static Logger logger = Logger.getLogger(Configuration.class);
-    public static final Properties property = new Properties();
+    private static final Properties property = new Properties();
 
-    //добавляем параметры из файла
-    public static void ConfigureServer(MyServer myServer) {
-
-        try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
+    public static void loadProperties(String configFilePath) {
+        try (FileInputStream fis = new FileInputStream(configFilePath)) {//
             property.load(fis);
-            myServer.setRootFolderPath(property.getProperty("rootFolderPath"));
-            myServer.setLocalPort(Integer.parseInt(property.getProperty("localPort")));
-            myServer.setIndexFile(property.getProperty("indexFile"));
-            myServer.setShutdownPort(Integer.parseInt(property.getProperty("shutdownPort")));
         } catch (IOException e) {
-            logger.error(String.format("Файл свойств отсуствует! - %s", e));
-
+            logger.error(String.format("Файл свойств отсуствует! Будут установлены значения по умолчанию - %s", e));
         }
 
+    }
+    //добавляем параметры из файла
 
+    public static Properties getProperties (){
+        return  new Properties(property);
     }
 
 

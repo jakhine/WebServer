@@ -9,10 +9,7 @@ import java.time.Instant;
 
 public class Listener extends Thread {
     private Logger logger = Logger.getLogger(Listener.class);
-    private Socket clientSocket;
-
     private boolean isOn = true;
-
     private ServerSocket sDSocket; //shutdownSocket
 
     public Listener(int port) {

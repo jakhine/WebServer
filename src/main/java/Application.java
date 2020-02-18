@@ -12,6 +12,8 @@ public class Application {
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
+        String configFilePath = "src/main/resources/config.properties";
+        Configuration.loadProperties(configFilePath);
         MyServer myServer = new MyServer();
         myServer.launch();
    }

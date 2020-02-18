@@ -5,6 +5,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.Instant;
+import java.util.Properties;
 
 
 /*
@@ -15,44 +16,51 @@ import java.time.Instant;
 создается КлиентСокет, и согласно Реквесту создается Респонс
 
  */
-public class MyServer   {
+public class MyServer {
     private Logger logger = Logger.getLogger(MyServer.class);
-    private String rootFolderPath;
-    private int localPort;
-    private int shutdownPort;
+    private String rootFolderPath = "c:\\www";   //Default values
+    private int localPort = 8888;                //Default values
+    private int shutdownPort = 8889;             //Default values
     private ServerSocket socket;
-    private ServerSocket sDSocket; //shutdownSocket
     private Socket clientSocket;
+    Listener shutdownListener;
     private String indexFile;
     boolean isOn = true;
 
+    public MyServer() {
+        Properties properties = Configuration.getProperties();
+        if (properties.isEmpty()) {
+            rootFolderPath = properties.getProperty("rootFolderPath");
+            localPort = Integer.parseInt(properties.getProperty("localPort"));
+            indexFile = properties.getProperty("indexFile");
+            shutdownPort = Integer.parseInt(properties.getProperty("shutdownPort"));
+        }
+    }
+
     public void launch() { // //TODO all that stuff goes in listener
-
-
-        Configuration.ConfigureServer(this);
         try {
-//            Thread thread = new Thread(myServer);//TODO
             createSocket();
-            Listener shutdownListener = new Listener(shutdownPort);
+            shutdownListener = new Listener(shutdownPort);
             shutdownListener.start();//слушает порт 8081 для выключения
             while (shutdownListener.isOn()) {
                 listen();
-
                 //Create request object
                 //Analyze request
                 //Create response
                 //Write response
+                try (InputStream input = clientSocket.getInputStream()) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+                        HttpRequest httpRequest = new HttpRequest(reader);
+                        logger.info(httpRequest);
+                        File file = new File(rootFolderPath + httpRequest.getPath());
+                        HttpResponse httpResponse = new HttpResponse(clientSocket, file);
 
-                HttpRequest httpRequest = new HttpRequest(clientSocket);
-                logger.info(httpRequest);
-                File file = new File(rootFolderPath + httpRequest.getPath());
-                HttpResponse httpResponse = new HttpResponse(clientSocket);
-                httpResponse.setFile(file);
-
+                    }
+                }
 
             }
         } catch (Exception e) {
-            if (isOn)
+            if (shutdownListener.isOn())
                 logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
             else logger.info(String.format("Server was shut down at %s", Instant.now()));
         }
@@ -62,17 +70,13 @@ public class MyServer   {
 
     void createSocket() throws IOException {
         socket = new ServerSocket(localPort);
-
-
     }
-
 
 
     void listen() throws IOException {
         clientSocket = this.socket.accept();
         logger.info(String.format("connection from address+ %s", clientSocket.getInetAddress()));
     }
-
 
 
     public void setRootFolderPath(String rootFolderPath) {

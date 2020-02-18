@@ -9,15 +9,16 @@ public class HttpResponse {
     private Logger logger = Logger.getLogger(HttpResponse.class);
     private final String protocol = "HTTP/1.1";
     private String statusCode;
-    private Map<String, String> typeMapping = new HashMap<>();
-    private File file;
+    private static Map<String, String> typeMapping = new HashMap<>();
+//    private File file;
 
     private String contentType = "";
 
-    public HttpResponse(Socket clientSocket) {
+    public HttpResponse(Socket clientSocket, File file) {
         try (OutputStream output = clientSocket.getOutputStream()) {                // try-catch with resources
             try (PrintWriter writer = new PrintWriter(output, true)) {
-                setTypeMapping(Configuration.property.getProperty("content-type"));
+                setTypeMapping(Configuration.getProperties().getProperty("content-type"));
+                sendResponseWithFile(this, file,writer,output);
             }
         } catch (IOException e) {
            logger.error(e);
@@ -59,10 +60,10 @@ public class HttpResponse {
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
     }
 
-    public void sendResponseWithFile(File file, PrintWriter writer, OutputStream output) {
-        HttpResponse response = new HttpResponse();
+    public void sendResponseWithFile(HttpResponse response, File file, PrintWriter writer, OutputStream output) {
+
         if (file.isDirectory()) {
-            file = new File(file.getAbsolutePath() + "/" + indexFile);
+            file = new File(file.getAbsolutePath() + "/" + Configuration.getProperties().getProperty("indexFile"));
         }
         if (!file.exists()) {
             response.setStatusCode("404 NOT FOUND");
@@ -110,9 +111,9 @@ public class HttpResponse {
         return contentType;
     }
 
-    public void setFile(File file) {
-        this.file = file;
-    }
+//    public void setFile(File file) {
+//        this.file = file;
+//    }
 
 }
 
