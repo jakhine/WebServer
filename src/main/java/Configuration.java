@@ -5,11 +5,14 @@
 
  */
 
+import org.apache.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 public class Configuration {
+    private static Logger logger = Logger.getLogger(Configuration.class);
     public static final Properties property = new Properties();
 
     //добавляем параметры из файла
@@ -22,7 +25,8 @@ public class Configuration {
             myServer.setIndexFile(property.getProperty("indexFile"));
             myServer.setShutdownPort(Integer.parseInt(property.getProperty("shutdownPort")));
         } catch (IOException e) {
-            MyServer.logger.error(String.format("Файл свойств отсуствует! - %s", e));
+            logger.error(String.format("Файл свойств отсуствует! - %s", e));
+
         }
 
 
