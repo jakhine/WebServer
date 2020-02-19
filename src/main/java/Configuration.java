@@ -15,13 +15,14 @@ public class Configuration {
     private static Logger logger = Logger.getLogger(Configuration.class);
     private static final Properties property = new Properties();
 
-    public static void loadProperties(String configFilePath) {
-        try (FileInputStream fis = new FileInputStream(configFilePath)) {//
+    public static boolean loadProperties(String configFilePath) {
+        try (FileInputStream fis = new FileInputStream(configFilePath)) {
             property.load(fis);
+            return true;
         } catch (IOException e) {
             logger.error(String.format("Файл свойств отсуствует! Будут установлены значения по умолчанию - %s", e));
+            return false;
         }
-
     }
     //добавляем параметры из файла
 

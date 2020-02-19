@@ -9,6 +9,7 @@ import java.time.Instant;
 
 public class Listener extends Thread {
     private Logger logger = Logger.getLogger(Listener.class);
+
     private boolean isOn = true;
     private ServerSocket sDSocket; //shutdownSocket
 
@@ -24,13 +25,16 @@ public class Listener extends Thread {
     public void run() {
         try {
             listenForShutdown();
+            logger.info("is shutting down");
+
+            logger.info(String.format("Server was shut down at %s", Instant.now()));
+
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
     void listenForShutdown() throws IOException {
-
         while (isOn) {
 
             Socket shdwnSckt = sDSocket.accept();
@@ -38,10 +42,14 @@ public class Listener extends Thread {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()))) {
                 if (reader.readLine().contains("shutdown")) {
                     isOn = false;
-                    logger.info(String.format("Server was shut down at %s", Instant.now()));
+
                 }
             }
         }
+    }
+
+    public void setOn(boolean on) {
+        isOn = on;
     }
 
     public boolean isOn() {

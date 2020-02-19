@@ -16,28 +16,20 @@ public class HttpRequest {
     private String protocol;
     private Map<String, String> headers;
 
-    public HttpRequest(BufferedReader reader ) throws IOException {
+    public HttpRequest(BufferedReader reader) throws IOException {
 
-
-                String line = reader.readLine();
+        String line = reader.readLine();
         logger.info(line);
-                Map<String, String> headers = new HashMap<>();
-                if (!line.isEmpty()) {
-
-                    while (reader.ready()) {
-                        String[] pair = reader.readLine().split(": ");
-                        if (pair.length == 2) headers.put(pair[0], pair[1]);
-                    }
-                    String[] lines = line.split(" ");
-                    this.httpMethod = lines[0];
-                    this.path = lines[1].replace("%20", " ");
-                    this.protocol = lines[2];
-                    this.headers = Collections.unmodifiableMap(headers);
-
-                }
-                logger.info("headLine is null");
-
-
+        Map<String, String> headers = new HashMap<>();
+        while (reader.ready()) {
+            String[] pair = reader.readLine().split(": ");
+            if (pair.length == 2) headers.put(pair[0], pair[1]);
+        }
+        String[] lines = line.split(" ");
+        this.httpMethod = lines[0];
+        this.path = lines[1].replace("%20", " ");
+        this.protocol = lines[2];
+        this.headers = Collections.unmodifiableMap(headers);
 
     }
 
@@ -52,7 +44,7 @@ public class HttpRequest {
     }
 
     public String getPath() {
-        return path;
+        return "" + path;
     }
 
     public String getProtocol() {
