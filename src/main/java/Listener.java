@@ -42,7 +42,6 @@ public class Listener extends Thread {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()))) {
                 if (reader.readLine().contains("shutdown")) {
                     isOn = false;
-
                 }
             }
         }

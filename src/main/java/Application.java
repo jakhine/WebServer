@@ -3,7 +3,7 @@ import org.apache.log4j.Logger;
 
 public class Application {
 
-   private Logger logger = Logger.getLogger(Application.class);
+   private static Logger logger = Logger.getLogger(Application.class);
     /*
     Класс для запуска и остановки сервера
      */

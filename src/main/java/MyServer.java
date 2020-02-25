@@ -2,12 +2,9 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 
 /*
@@ -20,28 +17,35 @@ import java.util.Properties;
  */
 public class MyServer {
     private Logger logger = Logger.getLogger(MyServer.class);
-    private String rootFolderPath;
+    public static  String rootFolderPath;
     private int localPort;
     private int shutdownPort;
     private ServerSocket socket;
-    private Socket clientSocket;
     private Listener shutdownListener;
-    private String indexFile;
-    private File file;
+    public static String indexFile;
     private static final HashMap<String, String> typeMapping = new HashMap<>();
     public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
-
+    private File statistics = new File ("");
 
     public MyServer(String configFilePath) {
+
+        Configuration config = Configuration.loadProperties(configFilePath);
+        rootFolderPath = config.getRootFolderPath();
+        localPort = Integer.parseInt(config.getLocalPort());
+        indexFile = config.getIndexFile();
+        shutdownPort = Integer.parseInt(config.getShutdownPort());
+        setTypeMapping(config.getMimeMapping());
+        statistics = new File( config.getStatisticsFile());
+/*
         if (Configuration.loadProperties(configFilePath)) {
             Properties properties = Configuration.getProperties();
-            logger.info(properties);
             rootFolderPath = properties.getProperty("rootFolderPath");
             localPort = Integer.parseInt(properties.getProperty("localPort"));
             indexFile = properties.getProperty("indexFile");
             shutdownPort = Integer.parseInt(properties.getProperty("shutdownPort"));
             setTypeMapping(properties.getProperty("content-type"));
         } else setDefaultValues();
+*/
 
     }
 
@@ -56,48 +60,11 @@ public class MyServer {
         }
         while (shutdownListener.isOn()) {
             listen();
-            try (InputStream input = clientSocket.getInputStream()) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) { // здесь открываю потоки так как закрытие потоков закрывает весь сокет
-                    HttpRequest httpRequest = createRequest(reader);                 //Create request object
-                    analyzeRequest(httpRequest);                                     //Analyze request
-                    HttpResponse httpResponse = createResponse();                     //Create response
-                    httpResponse.writeResponse(clientSocket);                        //Write response
-                }
-            } catch (Exception e) {
-                logger.error(String.format("Could not send response  %s", e.getMessage()), e);
-                send404Response();
-            }
         }
 
 
     }
 
-    void analyzeRequest(HttpRequest httpRequest) {
-        file = new File(rootFolderPath + httpRequest.getPath());
-        if (file.isDirectory()) {
-            file = new File(file.getAbsolutePath() + "/" + indexFile);
-        }
-    }
-
-    HttpRequest createRequest(BufferedReader reader) throws Exception {
-        HttpRequest req = new HttpRequest(reader);
-        logger.info(String.format("HttpRequest was created %s", req));
-        return req;
-    }
-
-    HttpResponse createResponse() {
-        HttpResponse httpResponse = new HttpResponse();
-        if (file == null) {
-            httpResponse.setStatusCode("404 NOT FOUND");
-        } else {
-            httpResponse.setFile(file);
-            httpResponse.setStatusCode("200");
-            String fileExtension = getFileExtension(file); // добываем расширение файла
-            httpResponse.setContentType(fileExtension);
-        }
-        logger.info(String.format("httpResponse was created %s ", httpResponse));
-        return httpResponse;
-    }
 
     void startShutdownListener() {
         shutdownListener = new Listener(shutdownPort);
@@ -109,30 +76,15 @@ public class MyServer {
         socket = new ServerSocket(localPort);
     }
 
-    String getFileExtension(File file) {
-        String fileExtension = "";
-        if (file.getName().contains(".")) {         // добываем расширение файла
-            String filename = file.getName();
-            fileExtension = filename.substring(filename.lastIndexOf("."));
-        }
-        return fileExtension;
-    }
-
     void listen() {
         try {
-            clientSocket = this.socket.accept();
-            logger.info(String.format("connection from address+ %s", clientSocket.getInetAddress()));
+            RequestHandler requestHandler = new RequestHandler(socket.accept());
+            requestHandler.start();
         } catch (IOException e) {
-            logger.error(String.format("Could not connect from address+ %s", clientSocket.getInetAddress()), e);
+            logger.error("Could not connect ", e);
             e.printStackTrace();
         }
 
-    }
-
-    public void setDefaultValues() {
-        rootFolderPath = "c:\\www";   //Default values
-        localPort = 8888;                //Default values
-        shutdownPort = 8889;             //Default values
     }
 
     public void setTypeMapping(String mimeMapping) {
@@ -145,30 +97,4 @@ public class MyServer {
             logger.info("headers were added " + typeMapping);
         } else logger.info("headers were not added " + typeMapping);
     }
-
-    public void send404Response() {
-        HttpResponse response = createResponse();
-        response.setStatusCode("404");
-        response.writeResponse(clientSocket);
-
-
-    }
-
-    public void setRootFolderPath(String rootFolderPath) {
-        this.rootFolderPath = rootFolderPath;
-    }
-
-
-    public void setLocalPort(int localPort) {
-        this.localPort = localPort;
-    }
-
-    public void setIndexFile(String indexFile) {
-        this.indexFile = indexFile;
-    }
-
-    public void setShutdownPort(int shutdownPort) {
-        this.shutdownPort = shutdownPort;
-    }
-
 }

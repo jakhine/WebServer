@@ -4,11 +4,19 @@ import java.io.*;
 import java.net.Socket;
 
 public class HttpResponse {
-    private Logger logger = Logger.getLogger(HttpResponse.class);
+
+    public static final HttpResponse HTTP_404 = new HttpResponse("404", "text/plain");
+
+    private static final Logger logger = Logger.getLogger(HttpResponse.class);
     private final String protocol = "HTTP/1.1";
     private String statusCode;
     private File file;
     private String contentType = "";
+
+    public HttpResponse(String statusCode, String contentType) {
+        this.statusCode = statusCode;
+        this.contentType = contentType;
+    }
 
     public HttpResponse() {
 
@@ -51,7 +59,7 @@ public class HttpResponse {
             }
             logger.info(String.format("File %s sent", file.getPath()));
         } catch (IOException e) {
-            logger.error(String.format("Could not send file: %s", e.getMessage()), e);
+            logger.error(String.format("Could not send file: %s", e.getMessage()));
         }
     }
 

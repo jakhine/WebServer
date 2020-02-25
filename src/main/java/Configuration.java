@@ -5,6 +5,7 @@
 
  */
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import org.apache.log4j.Logger;
 
 import java.io.FileInputStream;
@@ -12,23 +13,57 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class Configuration {
-    private static Logger logger = Logger.getLogger(Configuration.class);
-    private static final Properties property = new Properties();
+    private static final Logger logger = Logger.getLogger(Configuration.class);
 
-    public static boolean loadProperties(String configFilePath) {
+
+    private static final Properties DEFAULT_PROPERTIES = new Properties();
+
+    private final Properties properties;
+
+    public Configuration(Properties properties) {
+        this.properties = properties;
+    }
+    static {
+        DEFAULT_PROPERTIES.setProperty("rootFolderPath","c:\\www");
+        DEFAULT_PROPERTIES.setProperty("localPort","8888");
+        DEFAULT_PROPERTIES.setProperty("shutdownPort","8889");
+        DEFAULT_PROPERTIES.setProperty("indexFile","index.html");
+        DEFAULT_PROPERTIES.setProperty("content-type","txt:text/plain");
+        DEFAULT_PROPERTIES.setProperty("statisticsFile","c:\\www\\stats");
+
+    }
+    public static Configuration loadProperties(String configFilePath) {
         try (FileInputStream fis = new FileInputStream(configFilePath)) {
-            property.load(fis);
-            return true;
+            Properties p = new Properties();
+            p.load(fis);
+            logger.info(String.format("Loaded properties: %s", p));
+            return new Configuration(p);
         } catch (IOException e) {
             logger.error(String.format("Файл свойств отсуствует! Будут установлены значения по умолчанию - %s", e));
-            return false;
+            return new Configuration(DEFAULT_PROPERTIES);
         }
     }
     //добавляем параметры из файла
 
-    public static Properties getProperties (){
-        return  new Properties(property);
+    public String getRootFolderPath() {
+        return properties.getProperty("rootFolderPath", DEFAULT_PROPERTIES.getProperty("rootFolderPath"));
     }
+    public String getLocalPort() {
+        return properties.getProperty("localPort", DEFAULT_PROPERTIES.getProperty("localPort"));
+    }
+    public String getShutdownPort() {
+        return properties.getProperty("shutdownPort", DEFAULT_PROPERTIES.getProperty("shutdownPort"));
+    }
+    public String getIndexFile() {
+        return properties.getProperty("indexFile", DEFAULT_PROPERTIES.getProperty("indexFile"));
+    }
+    public String getMimeMapping() {
+        return properties.getProperty("content-type", DEFAULT_PROPERTIES.getProperty("content-type"));
+    }
+    public String getStatisticsFile() {
+        return properties.getProperty("statisticsFile", DEFAULT_PROPERTIES.getProperty("statisticsFile"));
+    }
+
 
 
 }
