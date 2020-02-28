@@ -5,12 +5,16 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
+
 public class RequestHandler extends Thread {
     private Logger logger = Logger.getLogger(RequestHandler.class);
     private Socket clientSocket;
-    private  String rootFolderPath = MyServer.rootFolderPath;
-    private  String indexFile = MyServer.indexFile;
+    private String rootFolderPath = MyServer.rootFolderPath;
+    private String indexFile = MyServer.indexFile;
     private File file;
+    private volatile static  int counter = 0;
+
+
 
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -18,7 +22,7 @@ public class RequestHandler extends Thread {
     }
 
     @Override
-    public void run() {
+    public  void run() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) { // здесь открываю потоки так как закрытие потоков закрывает весь сокет
             HttpRequest httpRequest = createRequest(reader);                 //Create request object
             analyzeRequest(httpRequest);                                     //Analyze request
@@ -30,20 +34,24 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private void analyzeRequest(HttpRequest httpRequest) {
+    private synchronized void analyzeRequest(HttpRequest httpRequest) {
+        counter++;
+        logger.info(httpRequest.getHttpMethod() + " " + counter);
+        ;
+
         file = new File(rootFolderPath + httpRequest.getPath());
         if (file.isDirectory()) {
             file = new File(file.getAbsolutePath() + "/" + indexFile);
         }
     }
 
-    HttpRequest createRequest(BufferedReader reader) throws Exception {
+     HttpRequest createRequest(BufferedReader reader) throws Exception {
         HttpRequest req = new HttpRequest(reader);
         logger.info(String.format("HttpRequest was created %s", req));
         return req;
     }
 
-    private HttpResponse createResponse() {
+    private  HttpResponse createResponse() {
         if (file == null) {
             return HttpResponse.HTTP_404;
         } else {
@@ -65,9 +73,4 @@ public class RequestHandler extends Thread {
         }
         return fileExtension;
     }
-    //
-//    из метода Launch начиная с отсюда
-//                listen();
-
-
 }

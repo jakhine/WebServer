@@ -13,6 +13,7 @@ public class Application {
         String configFilePath = "src/main/resources/config.properties";
         MyServer myServer = new MyServer(configFilePath);
         myServer.launch();
+
    }
 
 }

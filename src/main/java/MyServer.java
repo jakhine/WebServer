@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public class MyServer {
     private Logger logger = Logger.getLogger(MyServer.class);
-    public static  String rootFolderPath;
+    public static String rootFolderPath;
     private int localPort;
     private int shutdownPort;
     private ServerSocket socket;
@@ -25,7 +25,7 @@ public class MyServer {
     public static String indexFile;
     private static final HashMap<String, String> typeMapping = new HashMap<>();
     public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
-    private File statistics = new File ("");
+    private File statistics = new File("");
 
     public MyServer(String configFilePath) {
 
@@ -35,17 +35,7 @@ public class MyServer {
         indexFile = config.getIndexFile();
         shutdownPort = Integer.parseInt(config.getShutdownPort());
         setTypeMapping(config.getMimeMapping());
-        statistics = new File( config.getStatisticsFile());
-/*
-        if (Configuration.loadProperties(configFilePath)) {
-            Properties properties = Configuration.getProperties();
-            rootFolderPath = properties.getProperty("rootFolderPath");
-            localPort = Integer.parseInt(properties.getProperty("localPort"));
-            indexFile = properties.getProperty("indexFile");
-            shutdownPort = Integer.parseInt(properties.getProperty("shutdownPort"));
-            setTypeMapping(properties.getProperty("content-type"));
-        } else setDefaultValues();
-*/
+        statistics = new File(config.getStatisticsFile());
 
     }
 
