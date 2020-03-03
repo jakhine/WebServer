@@ -10,12 +10,13 @@ import java.time.Instant;
 public class Listener extends Thread {
     private Logger logger = Logger.getLogger(Listener.class);
 
-    private boolean isOn = true;
+    private boolean isOn = false;
     private ServerSocket sDSocket; //shutdownSocket
 
     public Listener(int port) {
         try {
             sDSocket = new ServerSocket(port);
+            isOn = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -26,7 +27,6 @@ public class Listener extends Thread {
         try {
             listenForShutdown();
             logger.info("is shutting down");
-
             logger.info(String.format("Server was shut down at %s", Instant.now()));
 
         } catch (IOException e) {

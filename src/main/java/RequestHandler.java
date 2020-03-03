@@ -4,15 +4,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class RequestHandler extends Thread {
+public class RequestHandler implements Runnable { // TODO implement Runnable
     private Logger logger = Logger.getLogger(RequestHandler.class);
     private Socket clientSocket;
     private String rootFolderPath = MyServer.rootFolderPath;
     private String indexFile = MyServer.indexFile;
     private File file;
-    private volatile static  int counter = 0;
+    AtomicInteger counter = new AtomicInteger(0);
+
 
 
 
@@ -34,15 +36,17 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private synchronized void analyzeRequest(HttpRequest httpRequest) {
-        counter++;
+    private  void analyzeRequest(HttpRequest httpRequest) {
+        counter.incrementAndGet();
         logger.info(httpRequest.getHttpMethod() + " " + counter);
-        ;
+//        MyServer.cache.get
 
         file = new File(rootFolderPath + httpRequest.getPath());
         if (file.isDirectory()) {
             file = new File(file.getAbsolutePath() + "/" + indexFile);
         }
+
+
     }
 
      HttpRequest createRequest(BufferedReader reader) throws Exception {
@@ -57,7 +61,7 @@ public class RequestHandler extends Thread {
         } else {
             HttpResponse httpResponse = new HttpResponse();
             httpResponse.setFile(file);
-            httpResponse.setStatusCode("200");
+            httpResponse.setStatusCode(200);
             String fileExtension = getFileExtension(file); // добываем расширение файла
             httpResponse.setContentType(fileExtension);
             logger.info(String.format("httpResponse was created %s ", httpResponse));

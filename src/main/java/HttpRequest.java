@@ -14,14 +14,12 @@ public class HttpRequest {
     private String parameters;
 
     public HttpRequest(BufferedReader reader) {
-
-
         try {
+            String line;
             while (reader.ready()) {
-                String line = reader.readLine();
+                 line = reader.readLine();
                 logger.info(line);
                 Map<String, String> headers = new HashMap<>();
-
                 if (line.contains("?")) parameters = line.substring(line.indexOf("?"));
                 logger.info(String.format("params = %s", parameters));
                 while (reader.ready()) {

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+
 /*
 Класс в котором
 создается объект сервера ,
@@ -27,6 +28,8 @@ public class MyServer {
     public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
     private File statistics = new File("");
 
+
+
     public MyServer(String configFilePath) {
 
         Configuration config = Configuration.loadProperties(configFilePath);
@@ -39,26 +42,22 @@ public class MyServer {
 
     }
 
-    public void launch() {
+    public void launch(){
         try {
             createSocket();
             startShutdownListener();
         } catch (Exception e) {
             logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
-            e.printStackTrace();
             shutdownListener.setOn(false);
         }
         while (shutdownListener.isOn()) {
             listen();
         }
-
-
     }
 
 
     void startShutdownListener() {
         shutdownListener = new Listener(shutdownPort);
-//        Runtime.getRuntime().addShutdownHook(shutdownListener);
         shutdownListener.start();//слушает порт 8081 для выключения
     }
 
@@ -69,10 +68,10 @@ public class MyServer {
     void listen() {
         try {
             RequestHandler requestHandler = new RequestHandler(socket.accept());
-            requestHandler.start();
+            requestHandler.run();
         } catch (IOException e) {
             logger.error("Could not connect ", e);
-            e.printStackTrace();
+
         }
 
     }
