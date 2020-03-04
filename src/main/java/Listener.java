@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.Instant;
 
 public class Listener extends Thread {
     private Logger logger = Logger.getLogger(Listener.class);
@@ -47,11 +46,11 @@ public class Listener extends Thread {
         }
     }
 
-    public void setOn(boolean on) {
-        isOn = on;
-    }
-
     public boolean isOn() {
         return isOn;
+    }
+
+    public void setOn(boolean on) {
+        isOn = on;
     }
 }

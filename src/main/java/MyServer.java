@@ -1,6 +1,7 @@
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -9,7 +10,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,17 +23,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
  */
 public class MyServer {
-    private Logger logger = Logger.getLogger(MyServer.class);
+    static final Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
+    private static final HashMap<String, String> typeMapping = new HashMap<>();
+    public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
     public static String rootFolderPath;
+    public static String indexFile;
+    private Logger logger = Logger.getLogger(MyServer.class);
     private int localPort;
     private int shutdownPort;
     private ServerSocket socket;
     private Listener shutdownListener;
-    public static String indexFile;
-    private static final HashMap<String, String> typeMapping = new HashMap<>();
-    public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
-    private File statistics = new File("");
-    static final Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
+    private File statistics;
 
 
     public MyServer(String configFilePath) {

@@ -1,10 +1,10 @@
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpResponse {
 
@@ -35,7 +35,7 @@ public class HttpResponse {
         return String.format("%s %s", protocol, statusCode);
     }
 
-    public  void writeResponse(Socket clientSocket) {
+    public void writeResponse(Socket clientSocket) {
         try (OutputStream output = clientSocket.getOutputStream()) {                // try-catch with resources
             try (PrintWriter writer = new PrintWriter(output, true)) {
                 writeHeaders(writer);
@@ -53,8 +53,8 @@ public class HttpResponse {
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
     }
 
-      private void sendFile(File file, OutputStream output) {
-        try  {
+    private void sendFile(File file, OutputStream output) {
+        try {
             output.write(Cache.getFile(file));
             logger.info(String.format("File %s sent", file.getPath()));
         } catch (IOException e) {

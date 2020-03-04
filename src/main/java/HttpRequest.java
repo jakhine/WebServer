@@ -8,22 +8,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpRequest {
+    private final String line;
     private Logger logger = Logger.getLogger(HttpRequest.class);
     private String httpMethod;
     private String path;
     private String protocol;
     private Map<String, String> headers;
     private String parameters;
-    private final String line;
 
     public HttpRequest(BufferedReader reader) throws Exception {
         try {
             String line;
 
 //            while (reader.ready()) {
-                 line = reader.readLine();
-                 this.line = line;
-            if(line!=null) {
+            line = reader.readLine();
+            this.line = line;
+            if (line != null) {
                 logger.info(String.format("Head line is %s", line));
                 Map<String, String> headers = new HashMap<>();
 
@@ -35,9 +35,11 @@ public class HttpRequest {
                 this.httpMethod = lines[0];
 
                 String path = URLDecoder.decode(lines[1], StandardCharsets.UTF_8.name());
-                if (path.contains("?")){ parameters = path.substring(path.indexOf("?"));
+                if (path.contains("?")) {
+                    parameters = path.substring(path.indexOf("?"));
                     logger.info(String.format("params = %s", parameters));
-                    path = path.substring(0,path.indexOf("?"));}
+                    path = path.substring(0, path.indexOf("?"));
+                }
                 this.path = path;
 
 
@@ -47,7 +49,7 @@ public class HttpRequest {
             }
         } catch (Exception e) {
             logger.error("Could not create request ", e);
-            throw new Exception() ;
+            throw new Exception();
         }
 
     }

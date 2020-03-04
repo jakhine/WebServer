@@ -10,12 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class RequestHandler implements Runnable { // TODO implement Runnable
+    static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
     private Logger logger = Logger.getLogger(RequestHandler.class);
     private Socket clientSocket;
     private String rootFolderPath = MyServer.rootFolderPath;
     private String indexFile = MyServer.indexFile;
     private File file;
-    static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
 
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -37,7 +37,7 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
     }
 
     private void analyzeRequest(HttpRequest httpRequest) {
-        MyServer.stats.computeIfAbsent(httpRequest.getHttpMethod(),k-> new AtomicInteger(0));
+        MyServer.stats.computeIfAbsent(httpRequest.getHttpMethod(), k -> new AtomicInteger(0));
         MyServer.stats.get(httpRequest.getHttpMethod()).incrementAndGet();
 //        counter.incrementAndGet();
         logger.info(httpRequest.getHttpMethod() + " " + MyServer.stats);
@@ -56,7 +56,7 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
         try {
             req = new HttpRequest(reader);
         } catch (Exception e) {
-          logger.error(String.format("Could not create HttpRequest  %s", e.getMessage()));
+            logger.error(String.format("Could not create HttpRequest  %s", e.getMessage()));
 
         }
         logger.info(String.format("HttpRequest was created %s", req));

@@ -1,11 +1,9 @@
-
 /*
 Класс который конфигурирует объект сервера из конфиг.файла
 
 
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import org.apache.log4j.Logger;
 
 import java.io.FileInputStream;
@@ -18,22 +16,24 @@ public class Configuration {
 
     private static final Properties DEFAULT_PROPERTIES = new Properties();
 
+    static {
+        DEFAULT_PROPERTIES.setProperty("rootFolderPath", "c:\\www");
+        DEFAULT_PROPERTIES.setProperty("localPort", "8888");
+        DEFAULT_PROPERTIES.setProperty("shutdownPort", "8889");
+        DEFAULT_PROPERTIES.setProperty("indexFile", "index.html");
+        DEFAULT_PROPERTIES.setProperty("content-type", "txt:text/plain");
+        DEFAULT_PROPERTIES.setProperty("statisticsFile", "c:\\www\\stats.txt");
+        DEFAULT_PROPERTIES.setProperty("maxFileSize", "500");
+
+
+    }
+
     private final Properties properties;
 
     public Configuration(Properties properties) {
         this.properties = properties;
     }
-    static {
-        DEFAULT_PROPERTIES.setProperty("rootFolderPath","c:\\www");
-        DEFAULT_PROPERTIES.setProperty("localPort","8888");
-        DEFAULT_PROPERTIES.setProperty("shutdownPort","8889");
-        DEFAULT_PROPERTIES.setProperty("indexFile","index.html");
-        DEFAULT_PROPERTIES.setProperty("content-type","txt:text/plain");
-        DEFAULT_PROPERTIES.setProperty("statisticsFile","c:\\www\\stats.txt");
-        DEFAULT_PROPERTIES.setProperty("maxFileSize","500");
 
-
-    }
     public static Configuration loadProperties(String configFilePath) {
         try (FileInputStream fis = new FileInputStream(configFilePath)) {
             Properties p = new Properties();
@@ -50,25 +50,30 @@ public class Configuration {
     public String getRootFolderPath() {
         return properties.getProperty("rootFolderPath", DEFAULT_PROPERTIES.getProperty("rootFolderPath"));
     }
+
     public String getLocalPort() {
         return properties.getProperty("localPort", DEFAULT_PROPERTIES.getProperty("localPort"));
     }
+
     public String getShutdownPort() {
         return properties.getProperty("shutdownPort", DEFAULT_PROPERTIES.getProperty("shutdownPort"));
     }
+
     public String getIndexFile() {
         return properties.getProperty("indexFile", DEFAULT_PROPERTIES.getProperty("indexFile"));
     }
+
     public String getMimeMapping() {
         return properties.getProperty("content-type", DEFAULT_PROPERTIES.getProperty("content-type"));
     }
+
     public String getStatisticsFile() {
         return properties.getProperty("statisticsFile", DEFAULT_PROPERTIES.getProperty("statisticsFile"));
     }
+
     public String getMaxFileSize() {
         return properties.getProperty("maxFileSize", DEFAULT_PROPERTIES.getProperty("statisticsFile"));
     }
-
 
 
 }
