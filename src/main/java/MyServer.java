@@ -2,10 +2,16 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /*
@@ -27,7 +33,7 @@ public class MyServer {
     private static final HashMap<String, String> typeMapping = new HashMap<>();
     public static final Map<String, String> TYPE_MAPPING = Collections.unmodifiableMap(typeMapping);
     private File statistics = new File("");
-
+    static final Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
 
 
     public MyServer(String configFilePath) {
@@ -38,20 +44,46 @@ public class MyServer {
         indexFile = config.getIndexFile();
         shutdownPort = Integer.parseInt(config.getShutdownPort());
         setTypeMapping(config.getMimeMapping());
+        Cache.setSize(Integer.parseInt(config.getMaxFileSize()));
         statistics = new File(config.getStatisticsFile());
 
     }
 
-    public void launch(){
+    public void launch() {
         try {
             createSocket();
             startShutdownListener();
+
         } catch (Exception e) {
             logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
             shutdownListener.setOn(false);
         }
         while (shutdownListener.isOn()) {
             listen();
+        }
+        logger.info(String.format("Server was shut down at %s", Instant.now()));
+        logger.info("number of requests: " + stats);
+        writeStatistics();
+
+
+    }
+
+    void writeStatistics() {
+        try {
+            if (statistics.createNewFile()) {
+                logger.info(String.format("File created: %s", statistics.getName()));
+                Files.write(statistics.toPath(),
+                        Collections.singleton(String.format("This file shows number of specific requests \n " +
+                                "%s number of requests: %s \n", Instant.now(), stats)), StandardCharsets.UTF_8);
+            } else {
+                Files.write(statistics.toPath(), Collections.singleton(String.format("%s number of requests: %s", Instant.now(), stats)), StandardOpenOption.APPEND);
+                logger.info("File already exists.");
+
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -71,7 +103,6 @@ public class MyServer {
             requestHandler.run();
         } catch (IOException e) {
             logger.error("Could not connect ", e);
-
         }
 
     }

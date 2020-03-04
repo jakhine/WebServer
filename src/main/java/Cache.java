@@ -7,19 +7,22 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
+    private static int size;
     private static final Logger logger = Logger.getLogger(Cache.class);
-    private static Map<String, byte[]> cache = new ConcurrentHashMap<>();
+    private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
+
     public static byte[] getFile(File file) throws IOException {
-        return cache.computeIfAbsent(file.getPath(), k -> {
-            try {
-                logger.info("cache added");
-                return Files.readAllBytes(file.toPath());
-
-            } catch (IOException e) {
-                return null;
-
-            }
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        if (bytes.length > size)
+            return bytes;
+        else return cache.computeIfAbsent(file.getPath(), k -> {
+            logger.info("cache added");
+            return bytes;
         });
+    }
+
+    public static void setSize(int size) {
+        Cache.size = size*1000;
     }
 }
 

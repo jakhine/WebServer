@@ -29,7 +29,9 @@ public class Configuration {
         DEFAULT_PROPERTIES.setProperty("shutdownPort","8889");
         DEFAULT_PROPERTIES.setProperty("indexFile","index.html");
         DEFAULT_PROPERTIES.setProperty("content-type","txt:text/plain");
-        DEFAULT_PROPERTIES.setProperty("statisticsFile","c:\\www\\stats");
+        DEFAULT_PROPERTIES.setProperty("statisticsFile","c:\\www\\stats.txt");
+        DEFAULT_PROPERTIES.setProperty("maxFileSize","500");
+
 
     }
     public static Configuration loadProperties(String configFilePath) {
@@ -62,6 +64,9 @@ public class Configuration {
     }
     public String getStatisticsFile() {
         return properties.getProperty("statisticsFile", DEFAULT_PROPERTIES.getProperty("statisticsFile"));
+    }
+    public String getMaxFileSize() {
+        return properties.getProperty("maxFileSize", DEFAULT_PROPERTIES.getProperty("statisticsFile"));
     }
 
 

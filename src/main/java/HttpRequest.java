@@ -1,6 +1,8 @@
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,29 +14,40 @@ public class HttpRequest {
     private String protocol;
     private Map<String, String> headers;
     private String parameters;
+    private final String line;
 
-    public HttpRequest(BufferedReader reader) {
+    public HttpRequest(BufferedReader reader) throws Exception {
         try {
             String line;
-            while (reader.ready()) {
+
+//            while (reader.ready()) {
                  line = reader.readLine();
-                logger.info(line);
+                 this.line = line;
+            if(line!=null) {
+                logger.info(String.format("Head line is %s", line));
                 Map<String, String> headers = new HashMap<>();
-                if (line.contains("?")) parameters = line.substring(line.indexOf("?"));
-                logger.info(String.format("params = %s", parameters));
+
                 while (reader.ready()) {
                     String[] pair = reader.readLine().split(": ");
                     if (pair.length == 2) headers.put(pair[0], pair[1]);
                 }
                 String[] lines = line.split(" ");
                 this.httpMethod = lines[0];
-                this.path = lines[1].replace("%20", " ");
+
+                String path = URLDecoder.decode(lines[1], StandardCharsets.UTF_8.name());
+                if (path.contains("?")){ parameters = path.substring(path.indexOf("?"));
+                    logger.info(String.format("params = %s", parameters));
+                    path = path.substring(0,path.indexOf("?"));}
+                this.path = path;
+
+
                 this.protocol = lines[2];
                 this.headers = Collections.unmodifiableMap(headers);
+//            }
             }
-
         } catch (Exception e) {
             logger.error("Could not create request ", e);
+            throw new Exception() ;
         }
 
     }
@@ -50,6 +63,7 @@ public class HttpRequest {
     }
 
     public String getPath() {
+
         return "" + path;
     }
 

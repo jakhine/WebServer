@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -13,10 +15,7 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
     private String rootFolderPath = MyServer.rootFolderPath;
     private String indexFile = MyServer.indexFile;
     private File file;
-    AtomicInteger counter = new AtomicInteger(0);
-
-
-
+    static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
 
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -24,21 +23,24 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
     }
 
     @Override
-    public  void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) { // здесь открываю потоки так как закрытие потоков закрывает весь сокет
+    public void run() {
+        // здесь открываю потоки так как закрытие потоков закрывает весь сокет
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             HttpRequest httpRequest = createRequest(reader);                 //Create request object
             analyzeRequest(httpRequest);                                     //Analyze request
-            HttpResponse httpResponse = createResponse();                     //Create response
-            httpResponse.writeResponse(clientSocket);                        //Write response
+            createSendResponse(clientSocket);                               //Create response
+//            httpResponse.writeResponse(clientSocket);                        //Write response
         } catch (Exception e) {
-            logger.error(String.format("Could not send response  %s", e.getMessage()), e);
+            logger.error(String.format("Could not send response  %s", e.getMessage()));
             HttpResponse.HTTP_404.writeResponse(clientSocket);
         }
     }
 
-    private  void analyzeRequest(HttpRequest httpRequest) {
-        counter.incrementAndGet();
-        logger.info(httpRequest.getHttpMethod() + " " + counter);
+    private void analyzeRequest(HttpRequest httpRequest) {
+        MyServer.stats.computeIfAbsent(httpRequest.getHttpMethod(),k-> new AtomicInteger(0));
+        MyServer.stats.get(httpRequest.getHttpMethod()).incrementAndGet();
+//        counter.incrementAndGet();
+        logger.info(httpRequest.getHttpMethod() + " " + MyServer.stats);
 //        MyServer.cache.get
 
         file = new File(rootFolderPath + httpRequest.getPath());
@@ -49,15 +51,21 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
 
     }
 
-     HttpRequest createRequest(BufferedReader reader) throws Exception {
-        HttpRequest req = new HttpRequest(reader);
+    HttpRequest createRequest(BufferedReader reader) {
+        HttpRequest req = null;
+        try {
+            req = new HttpRequest(reader);
+        } catch (Exception e) {
+          logger.error(String.format("Could not create HttpRequest  %s", e.getMessage()));
+
+        }
         logger.info(String.format("HttpRequest was created %s", req));
         return req;
     }
 
-    private  HttpResponse createResponse() {
-        if (file == null) {
-            return HttpResponse.HTTP_404;
+    private void createSendResponse(Socket clientSocket) {
+        if (!file.exists()) {
+            HttpResponse.HTTP_404.writeResponse(clientSocket);
         } else {
             HttpResponse httpResponse = new HttpResponse();
             httpResponse.setFile(file);
@@ -65,7 +73,7 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
             String fileExtension = getFileExtension(file); // добываем расширение файла
             httpResponse.setContentType(fileExtension);
             logger.info(String.format("httpResponse was created %s ", httpResponse));
-            return httpResponse;
+            httpResponse.writeResponse(clientSocket);
         }
     }
 
