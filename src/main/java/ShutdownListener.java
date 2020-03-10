@@ -6,18 +6,19 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Listener extends Thread {
-    private Logger logger = Logger.getLogger(Listener.class);
+public class ShutdownListener implements Runnable {
+    private Logger logger = Logger.getLogger(ShutdownListener.class);
 
     private boolean isOn = false;
     private ServerSocket sDSocket; //shutdownSocket
 
-    public Listener(int port) {
+    public ShutdownListener(int port) throws IOException {
         try {
             sDSocket = new ServerSocket(port);
             isOn = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Could not create ShutdownListener", e);
+            throw new IOException();
         }
     }
 
@@ -35,7 +36,6 @@ public class Listener extends Thread {
 
     void listenForShutdown() throws IOException {
         while (isOn) {
-
             Socket shdwnSckt = sDSocket.accept();
             logger.info(String.format("shutDownSocket connected  %s", shdwnSckt.getInetAddress()));
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(shdwnSckt.getInputStream()))) {

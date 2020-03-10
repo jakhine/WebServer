@@ -37,10 +37,10 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
     }
 
     private void analyzeRequest(HttpRequest httpRequest) {
-        MyServer.stats.computeIfAbsent(httpRequest.getHttpMethod(), k -> new AtomicInteger(0));
-        MyServer.stats.get(httpRequest.getHttpMethod()).incrementAndGet();
+        MyServer.stats.computeIfAbsent((String.format("%s %s", httpRequest.getHttpMethod(), httpRequest.getPath())), k -> new AtomicInteger(0));
+        MyServer.stats.get(String.format("%s %s", httpRequest.getHttpMethod(), httpRequest.getPath())).incrementAndGet();
 //        counter.incrementAndGet();
-        logger.info(httpRequest.getHttpMethod() + " " + MyServer.stats);
+        logger.info(String.format("%s %s %s", httpRequest.getHttpMethod(), httpRequest.getPath(), MyServer.stats));
 //        MyServer.cache.get
 
         file = new File(rootFolderPath + httpRequest.getPath());

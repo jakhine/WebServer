@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
+    private static int size;
     private static final Logger logger = Logger.getLogger(Cache.class);
     private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
-    private static int size;
 
     public static byte[] getFile(File file) throws IOException {
         byte[] bytes = Files.readAllBytes(file.toPath());

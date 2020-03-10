@@ -32,9 +32,8 @@ public class MyServer {
     private int localPort;
     private int shutdownPort;
     private ServerSocket socket;
-    private Listener shutdownListener;
+    private ShutdownListener shutdownListener;
     private File statistics;
-
 
     public MyServer(String configFilePath) {
 
@@ -68,7 +67,7 @@ public class MyServer {
 
     }
 
-    void writeStatistics() {
+    private void writeStatistics() {
         try {
             if (statistics.createNewFile()) {
                 logger.info(String.format("File created: %s", statistics.getName()));
@@ -78,7 +77,6 @@ public class MyServer {
             } else {
                 Files.write(statistics.toPath(), Collections.singleton(String.format("%s number of requests: %s", Instant.now(), stats)), StandardOpenOption.APPEND);
                 logger.info("File already exists.");
-
             }
 
 
@@ -88,16 +86,16 @@ public class MyServer {
     }
 
 
-    void startShutdownListener() {
-        shutdownListener = new Listener(shutdownPort);
-        shutdownListener.start();//слушает порт 8081 для выключения
+    private void startShutdownListener() throws IOException {
+        shutdownListener = new ShutdownListener(shutdownPort);
+        shutdownListener.run();//слушает порт 8081 для выключения
     }
 
-    void createSocket() throws IOException {
+    private void createSocket() throws IOException {
         socket = new ServerSocket(localPort);
     }
 
-    void listen() {
+    private void listen() {
         try {
             RequestHandler requestHandler = new RequestHandler(socket.accept());
             requestHandler.run();
@@ -107,7 +105,7 @@ public class MyServer {
 
     }
 
-    public void setTypeMapping(String mimeMapping) {
+    private void setTypeMapping(String mimeMapping) {
         if (mimeMapping != null) {
             for (String pair : mimeMapping.split(" ")) {
                 String extension = pair.split(":")[0];

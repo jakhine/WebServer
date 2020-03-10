@@ -20,7 +20,7 @@ public class HttpRequest {
         try {
             String line;
 
-//            while (reader.ready()) {
+
             line = reader.readLine();
             this.line = line;
             if (line != null) {
@@ -41,11 +41,9 @@ public class HttpRequest {
                     path = path.substring(0, path.indexOf("?"));
                 }
                 this.path = path;
-
-
                 this.protocol = lines[2];
                 this.headers = Collections.unmodifiableMap(headers);
-//            }
+
             }
         } catch (Exception e) {
             logger.error("Could not create request ", e);
