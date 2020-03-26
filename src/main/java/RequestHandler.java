@@ -1,5 +1,6 @@
 import org.apache.log4j.Logger;
 
+import javax.xml.ws.RequestWrapper;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -9,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class RequestHandler implements Runnable { // TODO implement Runnable
-    static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
+public class RequestHandler implements Runnable, IHttpRequestHandler     {
+        static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
     private Logger logger = Logger.getLogger(RequestHandler.class);
     private Socket clientSocket;
     private String rootFolderPath = MyServer.rootFolderPath;
@@ -20,12 +21,15 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
         logger.info(String.format("connection from address+ %s", clientSocket.getInetAddress()));
+//        this.run();
     }
 
-    @Override
+
+     @Override
     public void run() {
         // здесь открываю потоки так как закрытие потоков закрывает весь сокет
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
             HttpRequest httpRequest = createRequest(reader);                 //Create request object
             analyzeRequest(httpRequest);                                     //Analyze request
             createSendResponse(clientSocket);                               //Create response
@@ -35,6 +39,7 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
             HttpResponse.HTTP_404.writeResponse(clientSocket);
         }
     }
+
 
     private void analyzeRequest(HttpRequest httpRequest) {
         MyServer.stats.computeIfAbsent((String.format("%s %s", httpRequest.getHttpMethod(), httpRequest.getPath())), k -> new AtomicInteger(0));
@@ -57,7 +62,6 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
             req = new HttpRequest(reader);
         } catch (Exception e) {
             logger.error(String.format("Could not create HttpRequest  %s", e.getMessage()));
-
         }
         logger.info(String.format("HttpRequest was created %s", req));
         return req;
@@ -84,5 +88,10 @@ public class RequestHandler implements Runnable { // TODO implement Runnable
             fileExtension = filename.substring(filename.lastIndexOf("."));
         }
         return fileExtension;
+    }
+
+    @Override
+    public HttpResponse process(HttpRequest httpRequest) {
+        return null;
     }
 }

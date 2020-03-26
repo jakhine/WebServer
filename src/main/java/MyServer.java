@@ -52,14 +52,14 @@ public class MyServer {
         try {
             createSocket();
             startShutdownListener();
-
+            while (shutdownListener.isOn()) {
+                listen();
+            }
         } catch (Exception e) {
             logger.error(String.format("Could not create and start web server: %s", e.getMessage()), e);
             shutdownListener.setOn(false);
         }
-        while (shutdownListener.isOn()) {
-            listen();
-        }
+
         logger.info(String.format("Server was shut down at %s", Instant.now()));
         logger.info("number of requests: " + stats);
         writeStatistics();
@@ -87,8 +87,11 @@ public class MyServer {
 
 
     private void startShutdownListener() throws IOException {
-        shutdownListener = new ShutdownListener(shutdownPort);
-        shutdownListener.run();//слушает порт 8081 для выключения
+
+         shutdownListener = new ShutdownListener(shutdownPort);
+            Thread thread = new Thread(shutdownListener);
+         thread.start();
+        //слушает порт 8081 для выключения
     }
 
     private void createSocket() throws IOException {
@@ -97,8 +100,8 @@ public class MyServer {
 
     private void listen() {
         try {
-            RequestHandler requestHandler = new RequestHandler(socket.accept());
-            requestHandler.run();
+            Thread thread = new Thread ( new RequestHandler(socket.accept()));
+            thread.start();
         } catch (IOException e) {
             logger.error("Could not connect ", e);
         }

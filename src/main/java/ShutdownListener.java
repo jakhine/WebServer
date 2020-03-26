@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ShutdownListener implements Runnable {
-    private Logger logger = Logger.getLogger(ShutdownListener.class);
+    private static Logger logger = Logger.getLogger(ShutdownListener.class);
 
     private boolean isOn = false;
     private ServerSocket sDSocket; //shutdownSocket
@@ -16,6 +16,7 @@ public class ShutdownListener implements Runnable {
         try {
             sDSocket = new ServerSocket(port);
             isOn = true;
+//            this.run();
         } catch (IOException e) {
             logger.error("Could not create ShutdownListener", e);
             throw new IOException();

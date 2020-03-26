@@ -11,7 +11,7 @@ public class Cache {
     private static final Logger logger = Logger.getLogger(Cache.class);
     private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
 
-    public static byte[] getFile(File file) throws IOException {
+    public synchronized static byte[] getFile(File file) throws IOException {
         byte[] bytes = Files.readAllBytes(file.toPath());
         if (bytes.length > size)
             return bytes;
