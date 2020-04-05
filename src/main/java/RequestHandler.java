@@ -1,22 +1,39 @@
 import org.apache.log4j.Logger;
 
-import javax.xml.ws.RequestWrapper;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class RequestHandler implements Runnable, IHttpRequestHandler     {
-        static Map<String, AtomicInteger> stats = new ConcurrentHashMap<>();
-    private Logger logger = Logger.getLogger(RequestHandler.class);
+public class RequestHandler implements Runnable {
+    private static final Map<String, IHttpRequestHandler> reqHandlers = new ConcurrentHashMap<>();
+    private static final HttpRequestHandlerImpls iReqImpls = new HttpRequestHandlerImpls();
+    private static Logger logger = Logger.getLogger(RequestHandler.class);
     private Socket clientSocket;
     private String rootFolderPath = MyServer.rootFolderPath;
     private String indexFile = MyServer.indexFile;
     private File file;
+
+    static {
+        for (Field f :
+                iReqImpls.getClass().getDeclaredFields()) {
+            if (f.isAnnotationPresent(HttpRequestHandler.class)) {
+                HttpRequestHandler httpReqHandlerAnnotation = f.getAnnotation(HttpRequestHandler.class);
+                try {
+                    reqHandlers.put(httpReqHandlerAnnotation.value(), (IHttpRequestHandler) f.get(iReqImpls));
+                } catch (IllegalAccessException e) {
+                    logger.error("Could not find any instances with the annotation", e);
+                }
+
+            }
+        }
+    }
+
 
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -25,15 +42,21 @@ public class RequestHandler implements Runnable, IHttpRequestHandler     {
     }
 
 
-     @Override
+    @Override
     public void run() {
+
+
         // здесь открываю потоки так как закрытие потоков закрывает весь сокет
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            HttpRequest httpRequest = createRequest(reader);                 //Create request object
-            analyzeRequest(httpRequest);                                     //Analyze request
-            createSendResponse(clientSocket);                               //Create response
-//            httpResponse.writeResponse(clientSocket);                        //Write response
+            HttpRequest httpRequest = createRequest(reader);                //Create request object
+            if (reqHandlers.containsKey(httpRequest.getPath())) {
+                reqHandlers.get(httpRequest.getPath()).process(httpRequest).writeResponse(clientSocket);
+            } else {
+                analyzeRequest(httpRequest);                                     //Analyze request
+                createSendResponse(clientSocket);                               //Create response
+            }
+
         } catch (Exception e) {
             logger.error(String.format("Could not send response  %s", e.getMessage()));
             HttpResponse.HTTP_404.writeResponse(clientSocket);
@@ -44,9 +67,8 @@ public class RequestHandler implements Runnable, IHttpRequestHandler     {
     private void analyzeRequest(HttpRequest httpRequest) {
         MyServer.stats.computeIfAbsent((String.format("%s %s", httpRequest.getHttpMethod(), httpRequest.getPath())), k -> new AtomicInteger(0));
         MyServer.stats.get(String.format("%s %s", httpRequest.getHttpMethod(), httpRequest.getPath())).incrementAndGet();
-//        counter.incrementAndGet();
         logger.info(String.format("%s %s %s", httpRequest.getHttpMethod(), httpRequest.getPath(), MyServer.stats));
-//        MyServer.cache.get
+
 
         file = new File(rootFolderPath + httpRequest.getPath());
         if (file.isDirectory()) {
@@ -57,6 +79,8 @@ public class RequestHandler implements Runnable, IHttpRequestHandler     {
     }
 
     HttpRequest createRequest(BufferedReader reader) {
+
+
         HttpRequest req = null;
         try {
             req = new HttpRequest(reader);
@@ -66,6 +90,7 @@ public class RequestHandler implements Runnable, IHttpRequestHandler     {
         logger.info(String.format("HttpRequest was created %s", req));
         return req;
     }
+
 
     private void createSendResponse(Socket clientSocket) {
         if (!file.exists()) {
@@ -90,8 +115,4 @@ public class RequestHandler implements Runnable, IHttpRequestHandler     {
         return fileExtension;
     }
 
-    @Override
-    public HttpResponse process(HttpRequest httpRequest) {
-        return null;
-    }
 }

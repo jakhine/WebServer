@@ -15,7 +15,7 @@ public class HttpResponse {
     private int statusCode;
     private File file;
     private String contentType = "";
-
+    private String body = "";
 
     public HttpResponse(int statusCode, String contentType) {
         this.statusCode = statusCode;
@@ -51,6 +51,7 @@ public class HttpResponse {
         writer.println(contentType);
         logger.info(String.format("headers %s Sent", getHeadLine()));
         writer.println();                               // пустая строка, сигнализирующая об окончании контента запроса
+        if (!body.isEmpty()) writer.println(body);
     }
 
     private void sendFile(File file, OutputStream output) {
@@ -70,5 +71,9 @@ public class HttpResponse {
         this.file = file;
     }
 
+
+    public void setBody(String body) {
+        this.body = body;
+    }
 }
 
